@@ -1,6 +1,10 @@
 # hps-submarine-architecture
 
-Hello guys! This is the architecture for the submarine problem.
+Dear Classmates,
+    This is the architecture for our last game, submarine. \
+    The original content is located at: https://github.com/jbitton/hps-submarine-architecture \
+    During the year 2021, this architecture has been renovated by Yinqi Sun and Yue Zhou. \
+    If there is any question, please consider sending an email either to ys3540@nyu.edu or yz1268@nyu.edu
 
 There are multiple parts to this project:
 * The Submarine Alert UI to go with the game
