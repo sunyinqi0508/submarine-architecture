@@ -1,13 +1,15 @@
-import json
 from random import randint, choice
+from client_abstract_class import Player
 
-from clients.client_abstract_class import Player
+HOST = '127.0.0.1'
+PORT = 5001
+NAME = 'Python Trench Manager Client'
 
 class TrenchManager(Player):
-    def __init__(self, name):
-        super(TrenchManager, self).__init__(name=name, is_trench_manager=True)
-        game_info = json.loads(self.client.receive_data())
-        print('trench', game_info)
+    def __init__(self, name = NAME, host = HOST, port = PORT):
+        super().__init__(host, port, name)
+        game_info = self.recv()
+        print('Trench Client Started:', game_info)
         self.d = game_info['d']
         self.y = game_info['y']
         self.r = game_info['r']
@@ -16,17 +18,14 @@ class TrenchManager(Player):
         self.p = game_info['p']
 
     def play_game(self):
-        while True:
+        response = {'terminated':False, 'probe_results':[]}
+        while not response['terminated']:
             probes_to_send = self.send_probes()
-            self.client.send_data(json.dumps({"probes": probes_to_send}))
-            response = json.loads(self.client.receive_data())
+            self.send({"probes": probes_to_send})
+            response = self.recv()
             alert = self.choose_alert(probes_to_send, response['probe_results'])
-            self.client.send_data(json.dumps({"region": alert}))
-            response = json.loads(self.client.receive_data())
-            if 'game_over' in response:
-                print(f"Your final cost is: {response['trench_cost']}. " +
-                      f"The safety condition {'was' if response['was_condition_achieved'] else 'was not'} satisfied.")
-                exit(0)
+            self.send({"red_alert": alert})
+            response = self.recv()
             self.m -= 1
 
     def send_probes(self):
@@ -53,6 +52,9 @@ class TrenchManager(Player):
 
         This means that deploying the probe x returned True, y returned False, and z returned False
 
-        You must return one of two options: 'red' or 'yellow'
+        You must return whether or not the alert level is red alert for current time
         """
-        return choice(['red', 'yellow'])
+        return choice([True, False])
+
+if __name__ == '__main__':
+    TrenchManager().play_game()
