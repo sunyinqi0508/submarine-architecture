@@ -10,7 +10,7 @@ PORT = 5000
 WEB_HOST = '127.0.0.1'
 WEB_PORT = 8000
 TRENCH_PORT = 5001
-SUBMARINE_PORT = 5002
+SUBMARINE_PORT = 5005
 class GameServerCore(object):
     def __str__(self):
         return f'''*** Game Configuration ***:\n\t'
@@ -47,7 +47,7 @@ class GameServerCore(object):
 
     def move_n_probe(self):
         if self.submarine_moved and self.trench_moved:
-            # update state
+            # update state, first move submarine, then probe
             self.submarine_location = self.submarine_nextlocation
             n_probes = len(self.probes)
             self.trench_cost += n_probes * self.p
@@ -75,13 +75,15 @@ class GameServerCore(object):
 
         self.submarine_reply_lock.release()
         self.trench_reply_lock.release()
+        if self.terminated:
+            print("Game Terminated:", f"Time passed: {self.m}",f"Trench cost: {self.trench_cost}")
 
-    def cb_trench_notify(self, movement):
+    def cb_submarine_notify(self, movement):
         self.submarine_nextlocation = (self.submarine_location + movement > 0 - movement < 0) % 100
         self.submarine_moved = True
         self.move_n_probe()
     
-    def cb_submarine_notify(self, probes):
+    def cb_trench_notify(self, probes):
         self.probes = probes
         self.trench_moved = True
         self.move_n_probe()
@@ -91,29 +93,34 @@ class RemoteServer(object):
         self.current_duration = 0
         self.gameserver = gameserver
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.client_socket = None
         self.data = ''
         try:
             self.s.bind((host, preferred_port))
         except socket.error:
             self.s.bind((host, 0))
         self.port = self.s.getsockname()[1]
-        self.thread = threading.Thread(self.run)
-        self.thread.start()
+        self.thread = threading.Thread(target=self.run)
 
+    def start(self):
+        self.thread.start()
+        
     def get_data(self):
         self.data = ''
         while True:
-            d = self.s.recv(4096)
-            if len(d) > 0:
-                self.data += d
-            else:
+            d = self.client_socket.recv(4096).decode()
+            self.data += d
+            if len(d) < 4096:
                 break
     def nop(self):
         # replace get_data with nop when this client timeouts
         pass
     def run(self):
-        self.s.accept()
-        self.s.sendall(self.payload)
+        self.s.listen(1)
+        self.client_socket, client_address = self.s.accept()
+        print(f'Client accepted at {client_address}')
+        self.client_socket.sendall(self.payload)
         self.current_duration = time()
 
         while not self.gameserver.terminated:
@@ -121,14 +128,13 @@ class RemoteServer(object):
             self.get_data()
             self.current_duration -= time()
             self.jsondata = json.loads(self.data)
-            self.process_data(self.jsondata)
-            self.s.sendall(self.payload)
+            self.process_data()
+            self.client_socket.sendall(self.payload)
             self.current_duration = time()
 
 class TrenchServer(RemoteServer):
     def __init__ (self, host, gameserver):
         super().__init__(host, TRENCH_PORT,  gameserver)
-        print(f"Starting Trench Server on port {self.port}")
         self.payload = json.dumps(
             {
                 'd':gameserver.d, 
@@ -138,18 +144,21 @@ class TrenchServer(RemoteServer):
                 'L':gameserver.L,
                 'p':gameserver.p
             }
-        )
+        ).encode()
         self.lock = self.gameserver.trench_reply_lock
+        print(f"Starting Trench Server on port {self.port}")
+        self.start()
+
     def process_data(self):
         self.gameserver.trench_time_left += self.current_duration
         if self.gameserver.trench_time_left > 0:
             probes = self.jsondata['probes']
-            self.gameserver.cb_submarine_notify(probes)
+            self.gameserver.cb_trench_notify(probes)
             self.lock.acquire()
-            self.s.sendall(json.dumps({
+            self.client_socket.sendall(json.dumps({
                 'probe_results' : self.gameserver.echos,
                 'time_left' : self.gameserver.trench_time_left
-            }))
+            }).encode())
             self.current_duration = time()
             self.get_data()
             self.gameserver.trench_time_left += self.current_duration - time()
@@ -158,45 +167,48 @@ class TrenchServer(RemoteServer):
         else:
             probes = []
             self.get_data = self.nop
-            self.gameserver.cb_submarine_notify(probes)
+            self.gameserver.cb_trench_notify(probes)
             self.lock.acquire()
         
         self.gameserver.alert()
         self.payload = json.dumps({
             'terminated' : self.gameserver.terminated,
             'time_left' : self.gameserver.trench_time_left
-        })
+        }).encode()
 
 class SubmarineServer(RemoteServer):
     def __init__ (self, host, gameserver):
         super().__init__(host, SUBMARINE_PORT, gameserver)
-        print(f"Starting Submarine Server on port {self.port}")
         self.payload = json.dumps({
             'm':gameserver.m,
-            'L':gameserver.L
-        })
+            'L':gameserver.L,
+            'position' : gameserver.submarine_location
+        }).encode()
         self.lock = self.gameserver.submarine_reply_lock
+        print(f"Starting Submarine Server on port {self.port}")
+        self.start()
 
     def process_data(self):
         self.gameserver.submarine_time_left += self.current_duration
         if self.gameserver.submarine_time_left > 0:
             movement = self.jsondata['movement']
             self.gameserver.cb_submarine_notify(movement)
-            probed = []
-            for i, m in enumerate(self.gameserver.map):
-                if m & self.gameserver.MAP_PROBED:
-                    probed.append(i)
+            # probed = []
+            # for i, m in enumerate(self.gameserver.map):
+            #     if m & self.gameserver.MAP_PROBED:
+            #         probed.append(i)
+            probed = self.gameserver.map[self.gameserver.submarine_nextlocation] & self.gameserver.MAP_PROBED
             self.payload = json.dumps({
                 'terminated' : self.gameserver.terminated,
                 'time_left' : self.gameserver.submarine_time_left,
                 'probed' : probed
-            })
+            }).encode()
 
         else:
-            self.get_data = self.nop
+            self.get_data = self.nop # submarine out of time, can't move.
             self.gameserver.cb_submarine_notify(0)
 
 if __name__ == '__main__':
     core = GameServerCore()
-    trench = TrenchServer('', core)
-    submarine = SubmarineServer('', core)
+    trench = TrenchServer('0.0.0.0', core)
+    submarine = SubmarineServer('0.0.0.0', core)

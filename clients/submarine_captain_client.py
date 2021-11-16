@@ -1,29 +1,27 @@
-import json
 from random import randint
+from client_abstract_class import Player
 
-from clients.client_abstract_class import Player
-
+HOST = '127.0.0.1'
+PORT = 5005
+NAME = 'Python Submarine Client'
 
 class SubmarineCaptain(Player):
-    def __init__(self, name):
-        super(SubmarineCaptain, self).__init__(name=name, is_trench_manager=False)
-        game_info = json.loads(self.client.receive_data())
-        print('sub', game_info)
+    def __init__(self, name = NAME, host = HOST, port = PORT):
+        super().__init__(host, port, name)
+        game_info = self.recv()
+        print('submarine info:', game_info)
         self.m = game_info['m']
         self.L = game_info['L']
-        self.position = game_info['pos']
+        self.position = game_info['position']
 
     def play_game(self):
-        response = {}
-        while True:
-            move = self.your_algorithm(0 if not response else response['times_probed'])
-            self.client.send_data(json.dumps({"move": move}))
+        response = {'terminated': False, 'probed': False} #initial state
+        while not response['terminated']:
+            move = self.your_algorithm(response['probed'])
+            self.send({"movement": move})
             self.position += move
-            response = json.loads(self.client.receive_data())
-            if 'game_over' in response:
-                print(f"The trench manager's final cost is: {response['trench_cost']}. " +
-                      f"The safety condition {'was' if response['was_condition_achieved'] else 'was not'} satisfied.")
-                exit(0)
+            response = self.recv()
+            print(response)
             self.m -= 1
 
     def your_algorithm(self, times_probed):
@@ -37,3 +35,6 @@ class SubmarineCaptain(Player):
         You must return an integer between [-1, 1]
         """
         return randint(-1, 1)
+
+if __name__ == '__main__':
+    SubmarineCaptain().play_game()
