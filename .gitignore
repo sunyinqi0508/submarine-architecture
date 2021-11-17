@@ -1,3 +1,5 @@
+.vs/
+.vscode/
 node_modules/
 yarn.lock
 **/node_modules/
@@ -5,6 +7,11 @@ yarn.lock
 __pycache__
 **/build/
 *.pyc
+JavaClient/target/
+JavaClient/dependency-reduced-pom.xml
+CppClient/TrenchClient
+CppClient/SubmarineClient
+*.dSYM
 # testing
 /coverage
 
