@@ -2,8 +2,9 @@
 
 Dear Classmates,
     This is the architecture for our last game, submarine. \
-    The original content is located at: https://github.com/jbitton/hps-submarine-architecture \
-    During the year 2021, this architecture has been renovated by Yinqi Sun and Yue Zhou. \
+    Written by Yinqi Sun and Yue Zhou. \
+    The visualization interface is borrowed from the 
+    2018 architecture team https://github.com/jbitton/hps-submarine-architecture  
     If there is any question, please consider sending an email either to ys3540@nyu.edu or yz1268@nyu.edu
 
 There are multiple parts to this project:
@@ -32,23 +33,11 @@ Under the `clients` folder you will find three files. You should only care about
 * `submarine_captain_client.py`: You will insert your submarine client code in the `your_algorithm()` function. You don't need to touch _anything else_. Follow the instructions detailed in the docstring.
 * `trench_manager_client.py`: You will split up your trench client code into two functions: `send_probes` and `choose_alert`. I split it up into two separate functions for modularity purposes and the fact that they do have different logic. You don't need to touch _anything else_. Follow the instructions detailed in each docstring.
 
-## Playing a Manual Game
-
-In order to play a manual game (i.e., you enter in your moves every time using stdin), use the `--manual` flag. It has the following options:
-* `--manual both` you play the submarine captain and trench manager manually
-* `--manual sub` you play the submarine captain manually
-* `--manual trench` you play the trench manager manually
-
-So, when you'd run the python code, you'd just run: `python3.6 run_game.py --manual both` for instance.
-
 ## Modifying the Initial Game State
-
-If you want to test out various initial game state values, you only need to modify one line of code.
-
-In `run_game.py` on line 24, I initialize `controller = GameServer()`. To change the game state, inject any of the following parameters into `GameServer`: `d, y, r, m, L, p, and/or gui`.
+Simply pass the parameters to GameServerCore
 
 ```
-controller = GameServer(d=45, y=10, r=50, m=3, L=10, p=3, gui=False)
+controller = GameServerCore(d=45, y=10, r=50, m=3, L=10, p=3, gui=False)
 ```
 
 ## Running the Web Application
