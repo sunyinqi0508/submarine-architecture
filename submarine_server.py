@@ -11,20 +11,21 @@ TRENCH_PORT = 5001
 SUBMARINE_PORT = 5005
 class GameServerCore(object):
     def __str__(self):
-        return f'''*** Game Configuration ***:\n\t'
-            d = {self.d}\n\t
-            y = {self.y}\n\t
-            r = {self.r}\n\t
-            m = {self.m}\n\t
-            L = {self.L}\n\t
-            p = {self.p}\n'''
-    def __init__(self, d=36, y=6, r=6, m=10, L=4, p=2, gui=False):
+        return f'*** Game Configuration ***:\n\t'\
+            f'd = {self.d}\n\t'\
+            f'y = {self.y}\n\t'\
+            f'r = {self.r}\n\t'\
+            f'm = {self.m}\n\t'\
+            f'L = {self.L}\n\t'\
+            f'p = {self.p}\n'
+    def __init__(self, d=36, y=6, r=6, m=10, L=4, p=2, gui=False, verbose = True):
         self.d = d
         self.y = y
         self.r = r
         self.m = m
         self.L = L
         self.p = p
+        self.verbose = verbose
         self.probes = []
         self.MAP_PROBED = 0x2
         self.red_alert = False
@@ -85,9 +86,12 @@ class GameServerCore(object):
         self.current_time += 1
         if self.current_time >= self.m:
             self.terminated = True
+        if self.submarine_time_left < 0 and self.trench_time_left < 0:
+            print('Both clients are overtime.')
+            self.terminated = True
+
         # reply all
         self.trench_moved = self.submarine_moved = False
-
         self.submarine_reply_lock.release()
         self.trench_reply_lock.release()
         if self.terminated:
@@ -103,6 +107,12 @@ class GameServerCore(object):
                         'probes': self.probes
                     })
             )
+        if self.verbose:
+            print(f'Time {self.current_time} -> Sub location: {self.submarine_location}, ' 
+                  f'Alert level: {"red" if self.red_alert else "yellow"}, '
+                  f'Trench cost: {self.trench_cost}.')
+            print(f'\tProbes: {self.probes}, Probe Status: {self.echos}')
+            print(f'\tSubmarine Time Left: {self.submarine_time_left}, Trench Time Left: {self.trench_time_left}')
 
     def cb_submarine_notify(self, movement):
         self.submarine_nextlocation = (self.submarine_location + (movement > 0) - (movement < 0)) % 100
@@ -223,7 +233,7 @@ class SubmarineServer(RemoteServer):
             # for i, m in enumerate(self.gameserver.map):
             #     if m & self.gameserver.MAP_PROBED:
             #         probed.append(i)
-            probed = self.gameserver.map[self.gameserver.submarine_nextlocation] & self.gameserver.MAP_PROBED == 2
+            probed = (self.gameserver.map[self.gameserver.submarine_nextlocation] & self.gameserver.MAP_PROBED) == 2
             self.payload = json.dumps({
                 'terminated' : self.gameserver.terminated,
                 'time_left' : self.gameserver.submarine_time_left,
