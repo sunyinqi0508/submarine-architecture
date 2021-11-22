@@ -23,6 +23,7 @@ def init_trench_manager(name, is_manual_mode, fd):
     player.play_game()
 
 def main():
+<<<<<<< Updated upstream
     parser = ArgumentParser()
     parser.add_argument("--manual", help="Allows you to choose which player you'd like to play manually: 'sub', 'trench', or 'both'")
     args = parser.parse_args()
@@ -41,6 +42,14 @@ def main():
     player_2.start()
 
     controller = GameServer()
+=======
+    # tbd
+    '''
+        This is for us to streamline the execution of this game
+        For now, please use submarine_server.py directly.
+    '''
+    pass
+>>>>>>> Stashed changes
 
 if __name__ == '__main__':
     main()
