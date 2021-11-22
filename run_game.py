@@ -1,28 +1,8 @@
 import sys
-
-from argparse import ArgumentParser
-from multiprocessing import Process
-from time import sleep
-
-from submarine_server import GameServer
-
-from clients.submarine_captain_client import SubmarineCaptain
-from clients.trench_manager_client import TrenchManager
-
-from clients.manual_clients.submarine_captain_client import ManualSubmarineCaptain
-from clients.manual_clients.trench_manager_client import ManualTrenchManager
-
-def init_submarine_captain(name, is_manual_mode, fd):
-    sleep(1)
-    player = SubmarineCaptain(name=name) if not is_manual_mode else ManualSubmarineCaptain(name=name, fd=fd)
-    player.play_game()
-
-def init_trench_manager(name, is_manual_mode, fd):
-    sleep(1)
-    player = TrenchManager(name=name) if not is_manual_mode else ManualTrenchManager(name=name, fd=fd)
-    player.play_game()
+import os
 
 def main():
+<<<<<<< HEAD
 <<<<<<< Updated upstream
     parser = ArgumentParser()
     parser.add_argument("--manual", help="Allows you to choose which player you'd like to play manually: 'sub', 'trench', or 'both'")
@@ -50,6 +30,13 @@ def main():
     '''
     pass
 >>>>>>> Stashed changes
+=======
+    # tbd
+    '''
+        This is for us to streamline the execution of this game
+    '''
+    pass
+>>>>>>> 7a7068a355d096511d32d1e536cbc53a2a2b8295
 
 if __name__ == '__main__':
     main()
