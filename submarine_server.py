@@ -27,7 +27,7 @@ class GameServerCore(object):
         self.p = p
         self.verbose = verbose
         self.probes = []
-        self.MAP_PROBED = 0x2
+        self.submarine_probed = False
         self.red_alert = False
         self.terminated = False
         self.trench_cost = 0
@@ -65,15 +65,17 @@ class GameServerCore(object):
             self.submarine_location = self.submarine_nextlocation
             n_probes = len(self.probes)
             self.trench_cost += n_probes * self.p
+            self.submarine_probed = False
 
             self.echos = [False] * n_probes
             for i, p in enumerate(self.probes):
                 pl = p - self.L
                 for pstep in range(2*self.L + 1):
                     pos = (pl + pstep) % 100
-                    self.map[pos] |= self.MAP_PROBED
+                    # self.map[pos] |= self.MAP_PROBED
                     if pos  == self.submarine_location:
                         self.echos[i] = True
+                        self.submarine_probed = True
             self.trench_reply_lock.release()
 
     def alert(self):
@@ -160,10 +162,10 @@ class RemoteServer(object):
         self.current_duration = time()
 
         while not self.gameserver.terminated:
-            self.lock.acquire()
             self.get_data()
             self.current_duration -= time()
             self.jsondata = json.loads(self.data)
+            self.lock.acquire()
             self.process_data()
             self.client_socket.sendall(self.payload)
             self.current_duration = time()
@@ -233,11 +235,11 @@ class SubmarineServer(RemoteServer):
             # for i, m in enumerate(self.gameserver.map):
             #     if m & self.gameserver.MAP_PROBED:
             #         probed.append(i)
-            probed = (self.gameserver.map[self.gameserver.submarine_nextlocation] & self.gameserver.MAP_PROBED) == 2
+            # probed = self.gameserver.submarine_probed
             self.payload = json.dumps({
                 'terminated' : self.gameserver.terminated,
                 'time_left' : self.gameserver.submarine_time_left,
-                'probed' : probed 
+                'probed' : self.gameserver.submarine_probed 
             }).encode()
 
         else:
