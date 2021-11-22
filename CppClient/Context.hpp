@@ -199,6 +199,7 @@ public:
         json.finalize(s);
         fetch_data();
         terminated = getBool("terminated");
+        probed = getBool("probed");
     }
     void trench_update1() {
         json.newJson();
