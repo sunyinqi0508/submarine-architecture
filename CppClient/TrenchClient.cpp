@@ -18,16 +18,8 @@ void set_alert(Context& cxt) {
 int main(int argc, char* argv[])
 {
 	int port = 5001;
-	for (--argc; argc > 0; --argc){
-		const char* argi = argv[argc];
-		int _port = Context::parseInt(argi);
-		if (_port > 0)
-		{	
-			port = _port;
-			break;
-		}
-	}
-	auto cxt = Context(Context::ROLE::TRENCH, port);
+
+	auto cxt = Context(Context::TRENCH, argc, argv, port);
 	while (!cxt.terminated) {
 		generating_probes(cxt);
 		set_alert(cxt);
