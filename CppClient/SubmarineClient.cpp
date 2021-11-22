@@ -1,6 +1,8 @@
 #include "Context.hpp"
 int main(int argc, char* argv[]) {
-    auto cxt = Context(Context::SUBMARINE, 5005);
+	int port = 5001;
+
+    auto cxt = Context(Context::SUBMARINE, argc, argv, port);
     // *initials* : will not change during execution
     const int& m = cxt.m;
     const int& L = cxt.L;
