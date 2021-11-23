@@ -1,7 +1,7 @@
 import json
 import socket
 from random import randint
-from time import time
+import time
 import threading
 from websocket_server import WebsocketServer
 
@@ -58,6 +58,16 @@ class GameServerCore(object):
         else:
             self.web_server = None
         print(self)
+    def finalize(self):
+        if self.web_server is not None:
+            try:
+                self.web_server.shutdown()
+            except OSError:
+                pass
+            try:
+                self.web_server.server_close()
+            except OSError:
+                pass
 
     def move_n_probe(self):
         if self.submarine_moved and self.trench_moved:
@@ -96,8 +106,7 @@ class GameServerCore(object):
         self.trench_moved = self.submarine_moved = False
         self.submarine_reply_lock.release()
         self.trench_reply_lock.release()
-        if self.terminated:
-            print("Game Terminated:", f"Time passed: {self.m}",f"Trench cost: {self.trench_cost}")
+        
         if self.web_server:
             self.web_server.send_message_to_all(
                 json.dumps({
@@ -115,6 +124,8 @@ class GameServerCore(object):
                   f'Trench cost: {self.trench_cost}.')
             print(f'\tProbes: {self.probes}, Probe Status: {self.echos}')
             print(f'\tSubmarine Time Left: {self.submarine_time_left}, Trench Time Left: {self.trench_time_left}')
+        if self.terminated:
+            print("Game Terminated:", f"Time passed: {self.m}",f"Trench cost: {self.trench_cost}")
 
     def cb_submarine_notify(self, movement):
         self.submarine_nextlocation = (self.submarine_location + (movement > 0) - (movement < 0)) % 100
@@ -140,7 +151,15 @@ class RemoteServer(object):
             self.s.bind((host, 0))
         self.port = self.s.getsockname()[1]
         self.thread = threading.Thread(target=self.run)
-
+    def finalize(self):
+        try:
+            self.s.shutdown(socket.SHUT_RDWR)
+        except OSError:
+            pass
+        try:
+            self.s.close()
+        except OSError:
+            pass
     def start(self):
         self.thread.start()
         
@@ -159,16 +178,16 @@ class RemoteServer(object):
         self.client_socket, client_address = self.s.accept()
         print(f'Client accepted at {client_address}')
         self.client_socket.sendall(self.payload)
-        self.current_duration = time()
+        self.current_duration = time.time()
 
         while not self.gameserver.terminated:
             self.get_data()
-            self.current_duration -= time()
+            self.current_duration -= time.time()
             self.jsondata = json.loads(self.data)
             self.lock.acquire()
             self.process_data()
             self.client_socket.sendall(self.payload)
-            self.current_duration = time()
+            self.current_duration = time.time()
 
 class TrenchServer(RemoteServer):
     def __init__ (self, host, gameserver):
@@ -197,9 +216,9 @@ class TrenchServer(RemoteServer):
                 'probe_results' : self.gameserver.echos,
                 'time_left' : self.gameserver.trench_time_left
             }).encode())
-            self.current_duration = time()
+            self.current_duration = time.time()
             self.get_data()
-            self.gameserver.trench_time_left += self.current_duration - time()
+            self.gameserver.trench_time_left += self.current_duration - time.time()
             if self.gameserver.trench_time_left > 0:
                 self.gameserver.red_alert = json.loads(self.data)['red_alert']
         else:
@@ -247,6 +266,12 @@ class SubmarineServer(RemoteServer):
             self.gameserver.cb_submarine_notify(0)
 
 if __name__ == '__main__':
-    core = GameServerCore(gui=True)
-    trench = TrenchServer('0.0.0.0', core)
-    submarine = SubmarineServer('0.0.0.0', core)
+    while True:
+        core = GameServerCore(m=100, gui=True)
+        trench = TrenchServer('0.0.0.0', core)
+        submarine = SubmarineServer('0.0.0.0', core)
+        while not core.terminated:
+            time.sleep(1)
+        core.finalize()
+        trench.finalize()
+        submarine.finalize()
