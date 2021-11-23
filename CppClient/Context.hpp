@@ -24,7 +24,6 @@
 
 using std::string;
 using std::vector;
-
 struct Context
 {
 private:
@@ -100,23 +99,24 @@ private:
                 auto end = next(buf, ']');
                 while (start < end)
                 {
-                    list.push_back(parseInt(start));
+                    list.push_back(_getInt_impl(start));
                     start = next(start, ',');
                 }
             }
         }    
+        int _getInt_impl(const char* buf){
+            if (*buf == 't' || *buf == 'T')
+                return 1;
+            else
+                return parseInt(buf);
+        }
         int getInt(const char *field)
         {
             const char* buf = getField(buffer, field);
             int ret = 0;
             if (buf)
-            {
-                if (*buf == 't' || *buf == 'T')
-                    return 1;
-                else
-                    return parseInt(buf);
-            }
-            return ret;
+                return _getInt_impl(buf);
+            return 0;
         }    
          
         int getBool(const char *field)
@@ -174,12 +174,8 @@ private:
     } json;
 
 public:
-    enum ROLE
-    {
-        SUBMARINE,
-        TRENCH
-    };
- // __IN__
+    enum ROLE{ SUBMARINE, TRENCH };
+// __IN__
     int m, l, position;
     int d, y, r, p, L;
 // __OUT__
