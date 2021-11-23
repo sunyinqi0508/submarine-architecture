@@ -19,6 +19,18 @@ There are multiple parts to this project:
 
 You should see some output that looks similar to this:
 ```
+*** Game Configuration ***:
+        d = 36
+        y = 6
+        r = 6
+        m = 10
+        L = 4
+        p = 2
+
+Starting Trench Server on port 61409
+Starting Submarine Server on port 5005
+
+
 sub {'m': 10, 'L': 4, 'pos': 78}
 trench {'d': 36, 'y': 6, 'r': 6, 'm': 10, 'L': 4, 'p': 2}
 The trench manager's final cost is: 120. The safety condition was satisfied.
