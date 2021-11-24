@@ -4,8 +4,8 @@ import { toRadians } from '../assets/util';
 class Donut extends Component {
   componentDidUpdate() {
     const canvas = document.getElementById('donut');
-    canvas.width = 750;
-    canvas.height = 750;
+    canvas.width = 600;
+    canvas.height = 600;
 
     this.draw(canvas, canvas.getContext('2d'), ['#ef0e0e', '#efdc0e']);
   }

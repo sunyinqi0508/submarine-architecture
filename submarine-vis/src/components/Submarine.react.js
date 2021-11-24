@@ -5,8 +5,8 @@ const Submarine = (props) => (
   <div
     className="sea"
     style={{
-      left: 255 + 346.875 * Math.cos(toRadians(((props.pos - 25)/100) * 360)), 
-      top: 313 + 346.875 * Math.sin(toRadians(((props.pos - 25)/100) * 360))
+      left: .8*(255 + 346.875 * Math.cos(toRadians(((props.pos - 25)/100) * 360))), 
+      top: .8*(313 + 346.875 * Math.sin(toRadians(((props.pos - 25)/100) * 360)))
     }}
   >
     <div className="circle-wrapper">
@@ -33,8 +33,8 @@ const Probe = (props) => (
   <div
     className='needle'
     style={{
-      left: (375 + 30) + 346.875 * Math.cos(toRadians(((props.pos - 25)/100) * 360)), 
-      top: (375 + 30 + 24) + 346.875 * Math.sin(toRadians(((props.pos - 25)/100) * 360))
+      left: .8*((375 + 30)+ 346.875 * Math.cos(toRadians(((props.pos - 25)/100) * 360))), 
+      top: .8*((375 + 30 + 24) + 346.875 * Math.sin(toRadians(((props.pos - 25)/100) * 360)))
     }}
   />
 );

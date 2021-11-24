@@ -3,7 +3,7 @@
 Dear Classmates,
     This is the architecture for our last game, submarine. \
     Written by Yinqi Sun and Yue Zhou. \
-    The visualization interface is borrowed from the 
+    The Web UI is adapted from the 
     2018 architecture team https://github.com/jbitton/hps-submarine-architecture  
     If there are any questions, please feel free to sending an email either to ys3540@nyu.edu or yz1268@nyu.edu
 

@@ -105,6 +105,7 @@ private:
             }
         }    
         int _getInt_impl(const char* buf){
+            ws(buf);
             if (*buf == 't' || *buf == 'T')
                 return 1;
             else
