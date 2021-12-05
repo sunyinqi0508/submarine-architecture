@@ -2,10 +2,10 @@
 
 Dear Classmates,
     This is the architecture for our last game, submarine. \
-    Written by Yinqi Sun and Yue Zhou. \
+    Written by Yinqi Sun.  \
     The Web UI is adapted from the 
     2018 architecture team https://github.com/jbitton/hps-submarine-architecture  
-    If there are any questions, please feel free to sending an email either to ys3540@nyu.edu or yz1268@nyu.edu
+    If there are any questions, please feel free to send email either to ys3540@nyu.edu
 
 There are multiple parts to this project:
 * The Web interface display the statics and game progress  
@@ -70,3 +70,6 @@ The players will not be allowed to connect until the gui has connected to the Ga
 You can independently open the gui in a browser by going to the address `localhost:8000`... assuming you're running the react app on your computer. You could also run both of your clients independently and connect to the game server after you connect the GUI.
 
 If you have any questions about how the game would work, please stick with the descriptions on the course website: https://cs.nyu.edu/courses/fall21/CSCI-GA.2965-001/subhunt.html and if you find possible implementation differences in this architecture, please report the bugs to us and we will verify and fix them immediately.
+
+### Acknowledgment
+Thank Yue Zhou (yz1268@nyu.edu) for co-hosting the game at the day of competition.

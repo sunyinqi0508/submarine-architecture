@@ -9,8 +9,12 @@ __pycache__
 *.pyc
 JavaClient/target/
 JavaClient/dependency-reduced-pom.xml
+JavaClient/.classpath
+JavaClient/.settings
+JavaClient/.project
 CppClient/TrenchClient
 CppClient/SubmarineClient
+submarine-vis/package-lock.json
 *.dSYM
 # testing
 /coverage
